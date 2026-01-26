@@ -5,21 +5,61 @@ public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] private GameObject[] enemies;
     [SerializeField] private Transform[] spawnPoints;
-    [SerializeField] private float timeBetweenSpawns = 2f;
-    void Start()
+    [SerializeField] private float baseSpawnTime = 2f;
+
+    private Coroutine spawnCoroutine;
+    private GameManager gameManager;
+
+    private void Awake()
     {
-        StartCoroutine(SpawnEnemyCoroutine());
+        gameManager = FindAnyObjectByType<GameManager>();
     }
+
+    private void OnEnable()
+    {
+        if (spawnCoroutine == null)
+        {
+            spawnCoroutine = StartCoroutine(SpawnEnemyCoroutine());
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
+    }
+
     private IEnumerator SpawnEnemyCoroutine()
     {
         while (true)
         {
-            yield return new WaitForSeconds(timeBetweenSpawns);
-            GameObject enemy = enemies[Random.Range(0,enemies.Length)];
-            Transform spawnPoint = spawnPoints[Random.Range(0,spawnPoints.Length)];
-            Instantiate (enemy,spawnPoint.position,Quaternion.identity);
+            if (Time.timeScale == 0f)
+            {
+                yield return null;
+                continue;
+            }
+
+            yield return new WaitForSeconds(GetSpawnInterval());
+
+            if (enemies.Length == 0 || spawnPoints.Length == 0)
+                continue;
+
+            GameObject enemy = enemies[Random.Range(0, enemies.Length)];
+            Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
+
+            Instantiate(enemy, spawnPoint.position, Quaternion.identity);
         }
     }
 
-    
+    private float GetSpawnInterval()
+    {
+        if (gameManager == null) return baseSpawnTime;
+
+        // Wave cao → spawn nhanh hơn
+        float difficulty = gameManager.GetDifficultyMultiplier();
+        return Mathf.Clamp(baseSpawnTime / difficulty, 0.3f, baseSpawnTime);
+    }
 }

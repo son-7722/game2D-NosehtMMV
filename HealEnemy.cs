@@ -8,33 +8,35 @@ public class HealEnemy : Enemy
     {
         base.Start();
         scoreValue = 3;
+
+        if (gameManager != null)
+        {
+            healValue *= gameManager.GetDifficultyMultiplier();
+        }
     }
 
-    private void OnTriggerEnter2d(Collider2D conllision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (conllision.CompareTag("Player"))
+        if (collision.CompareTag("Player") && player != null)
         {
-            if (player != null)
-            {
-                player.TakeDamage(enterDamage);
-            }
+            player.TakeDamage(enterDamage);
         }
     }
-    private void OnTriggerStay2D (Collider2D collision)
+
+    private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        if (collision.CompareTag("Player") && player != null)
         {
-            if (player != null)
-            {
-                player.TakeDamage(stayDamage);
-            }
+            player.TakeDamage(stayDamage);
         }
     }
+
     protected override void Die()
     {
         HealPlayer();
         base.Die();
     }
+
     private void HealPlayer()
     {
         if (player != null)
