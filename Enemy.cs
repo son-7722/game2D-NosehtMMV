@@ -17,6 +17,20 @@ public abstract class Enemy : MonoBehaviour
     {
         player = FindAnyObjectByType<Player>();
         gameManager = FindAnyObjectByType<GameManager>();
+        
+        // Apply Difficulty Multiplier
+        if (gameManager != null)
+        {
+            float multiplier = gameManager.GetDifficultyMultiplier();
+            float speedMult = gameManager.GetSpeedMultiplier();
+            
+            maxHp *= multiplier;
+            enterDamage *= multiplier;
+            stayDamage *= multiplier;
+            
+            enemyMoveSpeed *= speedMult;
+        }
+
         currentHp = maxHp;
         UpdateHpBar();
     }

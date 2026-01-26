@@ -17,29 +17,41 @@ public class BossEnemy : Enemy
     {
         base.Start();
         scoreValue = 20;
+
+        if (gameManager != null)
+        {
+            float multiplier = gameManager.GetDifficultyMultiplier();
+            hpValue *= multiplier;
+            speedDanThuong *= multiplier;
+            speedDanVongTron *= multiplier;
+        }
     }
 
     protected override void Update()
     {
         base.Update();
-       if (Time.time >= nextSkillTime)
+        if (Time.time >= nextSkillTime)
         {
             SuDungSkill();
         }
     }
     protected override void Die()
     {
+        if (gameManager != null)
+        {
+            gameManager.OnBossKilled();
+        }
         Instantiate(usbPrefabs, transform.position, Quaternion.identity);
-        Destroy(gameObject); 
+        base.Die(); // Handles Score and Destroy
     }
-    private void OnTriggerEnter2D (Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
             player.TakeDamage(enterDamage);
         }
     }
-    private void OnTriggerStay2D (Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
@@ -50,26 +62,47 @@ public class BossEnemy : Enemy
     {
         if (player != null)
         {
-            Vector3 directionToPlayer = player.transform.position - firePoint.position;
-            directionToPlayer.Normalize();
-            GameObject bullet = Instantiate(bulletPrefabs,firePoint.position,Quaternion.identity);
-            EnemyBullet enemyBullet = bullet.AddComponent<EnemyBullet>();
-            enemyBullet.SetMovementDirection(directionToPlayer * speedDanThuong);
+            Vector2 direction =
+                (player.transform.position - firePoint.position).normalized;
+
+            GameObject bullet =
+                Instantiate(bulletPrefabs, firePoint.position, Quaternion.identity);
+
+            EnemyBullet enemyBullet = bullet.GetComponent<EnemyBullet>();
+            if (enemyBullet != null)
+            {
+                enemyBullet.SetDirection(direction);
+            }
         }
     }
+
+
+
     private void BanDanVongTron()
     {
         const int bulletCount = 12;
         float angleStep = 360f / bulletCount;
+
         for (int i = 0; i < bulletCount; i++)
         {
             float angle = i * angleStep;
-            Vector3 bulletDirection = new Vector3(Mathf.Cos(Mathf.Deg2Rad*angle),Mathf.Sin(Mathf.Deg2Rad*angle),0);
-            GameObject bullet = Instantiate(bulletPrefabs, transform.position, Quaternion.identity);
-            EnemyBullet enemyBullet = bullet.AddComponent<EnemyBullet>();
-            enemyBullet.SetMovementDirection(bulletDirection* speedDanVongTron);
+            Vector2 dir = new Vector2(
+                Mathf.Cos(angle * Mathf.Deg2Rad),
+                Mathf.Sin(angle * Mathf.Deg2Rad)
+            );
+
+            GameObject bullet =
+                Instantiate(bulletPrefabs, transform.position, Quaternion.identity);
+
+            EnemyBullet enemyBullet = bullet.GetComponent<EnemyBullet>();
+            if (enemyBullet != null)
+            {
+                enemyBullet.SetDirection(dir);
+            }
         }
     }
+
+
     private void HoiMau(float hpAmount)
     {
         currentHp = Mathf.Min(currentHp + hpAmount, maxHp);
@@ -81,7 +114,7 @@ public class BossEnemy : Enemy
     }
     private void DichChuyen()
     {
-        transform.position=player.transform.position;
+        transform.position = player.transform.position;
     }
     private void ChonSkillNgauNhien()
     {

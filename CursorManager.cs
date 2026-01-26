@@ -1,12 +1,14 @@
-
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CursorManager : MonoBehaviour
 {
     [SerializeField] private Texture2D cursorNormal;
     [SerializeField] private Texture2D cursorShot;
     [SerializeField] private Texture2D cursorReload;
-    private Vector3 hotspot = new Vector2(16, 48);
+
+    private Vector2 hotspot = new Vector2(16, 48);
+
     void Start()
     {
         Cursor.SetCursor(cursorNormal, hotspot, CursorMode.Auto);
@@ -14,19 +16,17 @@ public class CursorManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Cursor.SetCursor(cursorShot, hotspot, CursorMode.Auto);
-        }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            Cursor.SetCursor(cursorNormal, hotspot, CursorMode.Auto);
-        }
-        if (Input.GetMouseButtonDown(1))
+        if (Mouse.current == null) return;
+
+        if (Mouse.current.rightButton.isPressed)
         {
             Cursor.SetCursor(cursorReload, hotspot, CursorMode.Auto);
         }
-        else if (Input.GetMouseButtonUp(1))
+        else if (Mouse.current.leftButton.isPressed)
+        {
+            Cursor.SetCursor(cursorShot, hotspot, CursorMode.Auto);
+        }
+        else
         {
             Cursor.SetCursor(cursorNormal, hotspot, CursorMode.Auto);
         }

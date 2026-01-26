@@ -3,21 +3,36 @@ using UnityEngine;
 public class Explosion : MonoBehaviour
 {
     [SerializeField] private float damage = 25f;
-    private void OnTriggerEnter2D (Collider2D collision)
+    [SerializeField] private float lifeTime = 0.3f;
+
+    private bool hasDamaged = false;
+
+    private void Start()
     {
-        Player player = collision.GetComponent<Player>();
-        Enemy enemy = collision.GetComponent<Enemy>();
+        Destroy(gameObject, lifeTime); // Auto destroy
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (hasDamaged) return;
+
         if (collision.CompareTag("Player"))
         {
-            player.TakeDamage(damage);
+            Player player = collision.GetComponent<Player>();
+            if (player != null)
+            {
+                player.TakeDamage(damage);
+                hasDamaged = true;
+            }
         }
-        if (collision.CompareTag("Enemy"))
+        else if (collision.CompareTag("Enemy"))
         {
-            enemy.TakeDamage(damage);
+            Enemy enemy = collision.GetComponent<Enemy>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(damage);
+                hasDamaged = true;
+            }
         }
-    }
-    public void DestroyExplosion()
-    {
-        Destroy(gameObject);
     }
 }
