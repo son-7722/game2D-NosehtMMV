@@ -9,9 +9,14 @@ public abstract class Enemy : MonoBehaviour
     [SerializeField] private Image hpBar;
     [SerializeField] protected float enterDamage = 10f;
     [SerializeField] protected float stayDamage = 1f;
+    
+    protected GameManager gameManager;
+    protected int scoreValue = 0; // Default
+
     protected virtual void Start()
     {
         player = FindAnyObjectByType<Player>();
+        gameManager = FindAnyObjectByType<GameManager>();
         currentHp = maxHp;
         UpdateHpBar();
     }
@@ -47,6 +52,10 @@ public abstract class Enemy : MonoBehaviour
     }
     protected virtual void Die()
     {
+        if (gameManager != null)
+        {
+            gameManager.AddScore(scoreValue);
+        }
         Destroy(gameObject);
     }
     protected void UpdateHpBar()

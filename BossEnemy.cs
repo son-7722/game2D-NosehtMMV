@@ -12,6 +12,13 @@ public class BossEnemy : Enemy
     [SerializeField] private float skillCooldown = 2f;
     private float nextSkillTime = 0f;
     [SerializeField] private GameObject usbPrefabs;
+
+    protected override void Start()
+    {
+        base.Start();
+        scoreValue = 20;
+    }
+
     protected override void Update()
     {
         base.Update();

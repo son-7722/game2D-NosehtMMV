@@ -3,6 +3,13 @@ using UnityEngine;
 public class EnergyEnemy : Enemy
 {
     [SerializeField] private GameObject energyObject;
+
+    protected override void Start()
+    {
+        base.Start();
+        scoreValue = 5;
+    }
+
     private void OnTriggerEnter2D(Collider2D conllision)
     {
         if (conllision.CompareTag("Player"))

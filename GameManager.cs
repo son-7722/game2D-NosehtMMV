@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Cinemachine;
+using TMPro;
 
 
 public class GameManager : MonoBehaviour
@@ -21,11 +22,19 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private CinemachineCamera cam;
     [SerializeField] private GameObject mobileControls; // Reference to the Mobile Canvas/GameObject
+    
+    [Header("Score System")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+    private int score;
 
     void Start()
     {
         currentEnergy = 0;
         UpdateEnergyBar();
+        
+        score = 0;
+        UpdateScoreText();
+        
         boss.SetActive(false);
         MainMenu();
         audioManager.StopAudioGame();
@@ -34,6 +43,20 @@ public class GameManager : MonoBehaviour
         
         // Ensure Mobile Controls are OFF at start
         if(mobileControls != null) mobileControls.SetActive(false);
+    }
+
+    public void AddScore(int amount)
+    {
+        score += amount;
+        UpdateScoreText();
+    }
+
+    private void UpdateScoreText()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
+        }
     }
 
     public void AddEnergy()

@@ -3,6 +3,13 @@ using UnityEngine;
 public class HealEnemy : Enemy
 {
     [SerializeField] private float healValue = 20f;
+
+    protected override void Start()
+    {
+        base.Start();
+        scoreValue = 3;
+    }
+
     private void OnTriggerEnter2d(Collider2D conllision)
     {
         if (conllision.CompareTag("Player"))

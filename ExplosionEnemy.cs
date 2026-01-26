@@ -4,6 +4,13 @@ using UnityEngine;
 public class ExplosionEnemy : Enemy
 {
     [SerializeField] private GameObject explosionPrefabs;
+
+    protected override void Start()
+    {
+        base.Start();
+        scoreValue = 7;
+    }
+
     private void CreateExplosion()
     {
         if (explosionPrefabs != null)
