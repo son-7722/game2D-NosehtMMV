@@ -9,7 +9,11 @@ public class ShopManager : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private Gun gun;
 
+    [Header("UI Text")]
     [SerializeField] private TextMeshProUGUI usbText;
+    [SerializeField] private TextMeshProUGUI damageText;
+    [SerializeField] private TextMeshProUGUI speedText;
+    [SerializeField] private TextMeshProUGUI hpText;
 
     private int cost = 1;
 
@@ -20,21 +24,32 @@ public class ShopManager : MonoBehaviour
         if (mobileControls != null)
             mobileControls.SetActive(false);
 
-        UpdateUI();
+        UpdateUI(); // ✅ mở shop là update liền
     }
-
 
     void UpdateUI()
     {
-        usbText.text = "USB: " + gameManager.GetUsb();
+        if (gameManager != null)
+            usbText.text = "USB: " + gameManager.GetUsb();
+
+        if (gun != null)
+            damageText.text = "D: " + gun.GetDamage().ToString("0");
+
+        if (player != null)
+        {
+            speedText.text = "S: " + player.GetBaseMoveSpeed().ToString("0.0");
+            hpText.text = $"HP: {player.GetCurrentHp():0} / {player.GetMaxHp():0}";
+        }
     }
+
+    // ================= UPGRADE =================
 
     public void UpgradeDamage()
     {
         if (!gameManager.SpendUsb(cost)) return;
 
         gun.IncreaseDamage(4f);
-        UpdateUI();
+        UpdateUI(); // ✅ cập nhật ngay
     }
 
     public void UpgradeSpeed()
@@ -55,7 +70,7 @@ public class ShopManager : MonoBehaviour
 
     public void CloseShop()
     {
-        gameManager.SaveGame();
+        gameManager.SaveGame(); // ✅ save khi đóng shop
         gameObject.SetActive(false);
 
         if (mobileControls != null)
@@ -63,5 +78,4 @@ public class ShopManager : MonoBehaviour
 
         Time.timeScale = 1f;
     }
-
 }

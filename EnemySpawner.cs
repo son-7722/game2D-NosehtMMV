@@ -34,13 +34,13 @@ public class EnemySpawner : MonoBehaviour
     }
 
     public void StopSpawn()
-{
-    if (spawnCoroutine != null)
     {
-        StopCoroutine(spawnCoroutine);
-        spawnCoroutine = null;
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
     }
-}
 
 
     // ================= CORE =================
@@ -60,18 +60,45 @@ public class EnemySpawner : MonoBehaviour
             if (enemies.Length == 0 || spawnPoints.Length == 0)
                 continue;
 
-            GameObject enemy = enemies[Random.Range(0, enemies.Length)];
-            Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
+            int spawnCount = GetSpawnCount(); // 🔥 số enemy spawn theo wave
 
-            Instantiate(enemy, spawnPoint.position, Quaternion.identity);
+            for (int i = 0; i < spawnCount; i++)
+            {
+                GameObject enemy = enemies[Random.Range(0, enemies.Length)];
+                Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
+
+                Vector3 offset = new Vector3(
+                    Random.Range(-1.2f, 1.2f),
+                    Random.Range(-1.2f, 1.2f),
+                    0
+                );
+
+                Instantiate(enemy, spawnPoint.position + offset, Quaternion.identity);
+            }
         }
     }
 
-    private float GetSpawnInterval()
-    {
-        if (gameManager == null) return baseSpawnTime;
 
-        float difficulty = gameManager.GetDifficultyMultiplier();
-        return Mathf.Clamp(baseSpawnTime / difficulty, 0.3f, baseSpawnTime);
+    private float GetSpawnInterval()
+{
+    if (gameManager == null) return baseSpawnTime;
+
+    int wave = gameManager.GetCurrentWave();
+
+    // 🔥 giảm 0.05 mỗi wave
+    float spawnTime = baseSpawnTime - (wave - 1) * 0.05f;
+
+    // (tuỳ chọn) kết hợp difficulty
+    spawnTime /= gameManager.GetDifficultyMultiplier();
+
+    // ⛔ giới hạn tránh spawn quá nhanh
+    return Mathf.Clamp(spawnTime, 0.5f, baseSpawnTime);
+}
+    int GetSpawnCount()
+    {
+        if (gameManager == null) return 1;
+        int wave = gameManager.GetCurrentWave();
+        return Mathf.Clamp((wave - 1) / 4 + 1, 1, 10);
+
     }
 }

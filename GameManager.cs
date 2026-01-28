@@ -7,7 +7,7 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     private int currentEnergy;
-    [SerializeField] private int energyThreshold = 4;
+    [SerializeField] private int energyThreshold = 3;
     [SerializeField] private GameObject boss;
     [SerializeField] private GameObject enemySpawner;
     private bool bossCalled = false;
@@ -28,6 +28,11 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private GameObject mobileControls; // Reference to the Mobile Canvas/GameObject
 
+    [Header("Wave Score")]
+    [SerializeField] private TextMeshProUGUI waveScoreText;
+    private int waveScore = 0;
+
+
     [Header("Score System")]
     [SerializeField] private TextMeshProUGUI scoreText;
     private int score;
@@ -39,7 +44,7 @@ public class GameManager : MonoBehaviour
     private int usbCount = 0;
     private int bossesAlive = 0;
     private float difficultyMultiplier = 1.0f;
-    [SerializeField] private Transform bossSpawnPoint; // Where to spawn bosses
+    [SerializeField] private Transform[] bossSpawnPoints;
     [SerializeField] private Button continueButton;
 
     void Start()
@@ -103,6 +108,10 @@ public class GameManager : MonoBehaviour
         wave = data.wave;
         score = data.score;
         usbCount = data.usbCount;
+
+        waveScore = 0;
+        UpdateWaveScoreUI();
+
         difficultyMultiplier = data.difficultyMultiplier;
 
         currentEnergy = 0;
@@ -136,14 +145,33 @@ public class GameManager : MonoBehaviour
 
     public void AddScore(int amount)
     {
-        score += amount;
+        score += amount;        // tổng điểm toàn game
+        waveScore += amount;   // điểm RIÊNG wave
+
         UpdateScoreText();
+        UpdateWaveScoreUI();
+
+        // ✅ Đạt điều kiện gọi boss bằng điểm wave
+        if (!bossCalled && waveScore >= GetWaveScoreNeed())
+        {
+            CallBoss();
+        }
 
         if (score >= 9999999)
         {
             WinGame();
         }
     }
+
+    void UpdateWaveScoreUI()
+    {
+        if (waveScoreText != null)
+        {
+            waveScoreText.text =
+                $"Wave Score: {waveScore} / {GetWaveScoreNeed()}";
+        }
+    }
+
 
     private void UpdateScoreText()
     {
@@ -219,8 +247,11 @@ public class GameManager : MonoBehaviour
     private void StartNextWave()
     {
         wave++;
-        difficultyMultiplier += 0.1f;
 
+        waveScore = 0; // ✅ RESET ĐIỂM WAVE
+        UpdateWaveScoreUI();
+
+        difficultyMultiplier += 0.1f;
         currentEnergy = 0;
         UpdateEnergyBar();
         UpdateWaveUI();
@@ -255,45 +286,77 @@ public class GameManager : MonoBehaviour
 
     public void AddEnergy()
     {
-        if (bossCalled)
-        {
-            return;
-        }
-        currentEnergy += 1;
+        if (bossCalled) return;
+
+        currentEnergy++;
         UpdateEnergyBar();
-        if (currentEnergy >= energyThreshold) // Changed to >= just in case
+
+        // ✅ Điều kiện 1: Đầy energy (wave cao thì cần nhiều hơn)
+        if (currentEnergy >= GetEnergyThreshold())
         {
             CallBoss();
         }
     }
+
+    int GetWaveScoreNeed()
+    {
+        return 120 + (wave - 1) * 30;
+    }
+
+
+    int GetEnergyThreshold()
+    {
+        return energyThreshold + wave;
+    }
+
+
     private void CallBoss()
     {
+        currentEnergy = 0;
+        UpdateEnergyBar();
+
+        if (bossCalled) return;
         bossCalled = true;
         ClearAllNormalEnemies();
 
-        bossesAlive = wave;
-        usbNeedToPickup = wave;    // ✅ wave 2 → cần nhặt 2 USB
+        bossesAlive = (wave + 1) / 2;
+        usbNeedToPickup = bossesAlive;
         waveReadyToSave = false;
-
-        Vector3 spawnPos = bossSpawnPoint != null ? bossSpawnPoint.position : boss.transform.position;
-
-        for (int i = 0; i < bossesAlive; i++)
-        {
-            Vector3 offset = new Vector3(i * 2, 0, 0);
-            Instantiate(boss, spawnPos + offset, Quaternion.identity).SetActive(true);
-        }
 
         enemySpawner.SetActive(false);
         gameUi.SetActive(false);
+
         audioManager.PlayBossAudio();
         cam.Lens.OrthographicSize = 10f;
         red.SetActive(true);
+
         if (mobileControls != null)
             mobileControls.SetActive(true);
+
+        // ===== SPAWN BOSS =====
+        for (int i = 0; i < bossesAlive; i++)
+        {
+            Transform spawnPoint = bossSpawnPoints[
+                i % bossSpawnPoints.Length   // tránh out of range
+            ];
+
+            Vector3 randomOffset = new Vector3(
+                Random.Range(-1.5f, 1.5f),
+                Random.Range(-1.5f, 1.5f),
+                0
+            );
+
+            Instantiate(
+                boss,
+                spawnPoint.position + randomOffset,
+                Quaternion.identity
+            ).SetActive(true);
+        }
 
         if (continueButton != null)
             continueButton.gameObject.SetActive(SaveSystem.HasSave());
     }
+
     private void ClearAllNormalEnemies()
     {
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
@@ -303,16 +366,24 @@ public class GameManager : MonoBehaviour
             Destroy(enemy);
         }
     }
+    public int GetCurrentWave()
+    {
+        return wave;
+    }
+
 
 
     private void UpdateEnergyBar()
     {
         if (energyBar != null)
         {
-            float fillAmount = Mathf.Clamp01((float)currentEnergy / (float)energyThreshold);
+            float fillAmount = Mathf.Clamp01(
+                (float)currentEnergy / GetEnergyThreshold()
+            );
             energyBar.fillAmount = fillAmount;
         }
     }
+
     public void MainMenu()
     {
         mainMenu.SetActive(true);
