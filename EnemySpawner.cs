@@ -17,20 +17,33 @@ public class EnemySpawner : MonoBehaviour
 
     private void OnEnable()
     {
-        if (spawnCoroutine == null)
-        {
-            spawnCoroutine = StartCoroutine(SpawnEnemyCoroutine());
-        }
+        StartSpawn();
     }
 
     private void OnDisable()
     {
-        if (spawnCoroutine != null)
-        {
-            StopCoroutine(spawnCoroutine);
-            spawnCoroutine = null;
-        }
+        StopSpawn();
     }
+
+    // ================= PUBLIC API =================
+
+    public void StartSpawn()
+    {
+        if (spawnCoroutine == null)
+            spawnCoroutine = StartCoroutine(SpawnEnemyCoroutine());
+    }
+
+    public void StopSpawn()
+{
+    if (spawnCoroutine != null)
+    {
+        StopCoroutine(spawnCoroutine);
+        spawnCoroutine = null;
+    }
+}
+
+
+    // ================= CORE =================
 
     private IEnumerator SpawnEnemyCoroutine()
     {
@@ -58,7 +71,6 @@ public class EnemySpawner : MonoBehaviour
     {
         if (gameManager == null) return baseSpawnTime;
 
-        // Wave cao → spawn nhanh hơn
         float difficulty = gameManager.GetDifficultyMultiplier();
         return Mathf.Clamp(baseSpawnTime / difficulty, 0.3f, baseSpawnTime);
     }

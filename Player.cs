@@ -5,7 +5,8 @@ using UnityEngine.InputSystem;
 public class Player : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private Joystick joystick;
+    [SerializeField] private NewInputJoystick joystick;
+
 
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
@@ -126,4 +127,52 @@ public class Player : MonoBehaviour
         if (hpBar != null)
             hpBar.fillAmount = currentHp / maxHp;
     }
+    public float GetCurrentHp()
+    {
+        return currentHp;
+    }
+
+    public void SetHp(float hp)
+    {
+        currentHp = Mathf.Clamp(hp, 0, maxHp);
+        UpdateHpBar();
+    }
+    // ====== UPGRADE API ======
+    public void IncreaseMaxHp(float amount)
+    {
+        maxHp += amount;
+        currentHp += amount; // hồi thêm khi nâng
+        UpdateHpBar();
+    }
+
+    public void IncreaseMoveSpeed(float amount)
+    {
+        baseMoveSpeed += amount;
+        moveSpeed = baseMoveSpeed;
+    }
+    // ===== SAVE / LOAD API =====
+    public float GetMaxHp()
+    {
+        return maxHp;
+    }
+
+    public float GetBaseMoveSpeed()
+    {
+        return baseMoveSpeed;
+    }
+
+    public void SetMaxHp(float value)
+    {
+        maxHp = value;
+        currentHp = Mathf.Min(currentHp, maxHp);
+        UpdateHpBar();
+    }
+
+    public void SetMoveSpeed(float value)
+    {
+        baseMoveSpeed = value;
+        moveSpeed = value;
+    }
+
+
 }

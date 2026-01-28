@@ -4,7 +4,7 @@ public class PlayerBullet : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 25f;
     [SerializeField] private float lifeTime = 0.5f;
-    [SerializeField] private float damage = 30f;
+    [SerializeField] private float damage;
     [SerializeField] private GameObject bloodPrefabs;
 
     private Rigidbody2D rb;
@@ -47,5 +47,9 @@ public class PlayerBullet : MonoBehaviour
 
             Destroy(gameObject);
         }
+    }
+    public void SetDamage(float value)
+    {
+        damage = value;
     }
 }

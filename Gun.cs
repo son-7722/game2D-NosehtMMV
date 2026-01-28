@@ -10,6 +10,7 @@ public class Gun : MonoBehaviour
     [SerializeField] private Transform firePos;
     [SerializeField] private GameObject bulletPrefabs;
     [SerializeField] private float shotDelay = 0.15f;
+    [SerializeField] private float damage = 30f;
     private float nextShot;
 
     [SerializeField] private int maxAmmo = 24;
@@ -101,12 +102,22 @@ public class Gun : MonoBehaviour
         if (currenAmmo <= 0 || Time.time < nextShot) return;
 
         nextShot = Time.time + shotDelay;
-        Instantiate(bulletPrefabs, firePos.position, firePos.rotation);
+
+        GameObject bullet = Instantiate(bulletPrefabs, firePos.position, firePos.rotation);
+
+        // 🔥 TRUYỀN DAMAGE TỪ GUN SANG BULLET
+        PlayerBullet playerBullet = bullet.GetComponent<PlayerBullet>();
+        if (playerBullet != null)
+        {
+            playerBullet.SetDamage(damage);
+        }
+
         currenAmmo--;
 
         UpdateAmmoText();
         audioManager?.PlayShootSound();
     }
+
 
     void ReloadGun()
     {
@@ -147,5 +158,17 @@ public class Gun : MonoBehaviour
     {
         if (ammoText == null) return;
         ammoText.text = currenAmmo > 0 ? currenAmmo.ToString() : "EMPTY";
+    }
+    public float GetDamage()
+    {
+        return damage;
+    }
+    public void SetDamage(float value)
+    {
+        damage = value;
+    }
+    public void IncreaseDamage(float amount)
+    {
+        damage += amount;
     }
 }
