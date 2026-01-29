@@ -72,6 +72,7 @@ public class BossEnemy : Enemy
             if (enemyBullet != null)
             {
                 enemyBullet.SetDirection(direction);
+                enemyBullet.SetBossBullet(true);
             }
         }
     }
@@ -98,6 +99,7 @@ public class BossEnemy : Enemy
             if (enemyBullet != null)
             {
                 enemyBullet.SetDirection(dir);
+                enemyBullet.SetBossBullet(true); 
             }
         }
     }

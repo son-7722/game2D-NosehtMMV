@@ -46,6 +46,9 @@ public class GameManager : MonoBehaviour
     private float difficultyMultiplier = 1.0f;
     [SerializeField] private Transform[] bossSpawnPoints;
     [SerializeField] private Button continueButton;
+    
+    private bool highScoreSaved = false;
+
 
     void Start()
     {
@@ -396,17 +399,24 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
     }
     public void GameOverMenu()
+{
+    if (!highScoreSaved)
     {
-        SaveSystem.DeleteSave();
-        gameOverMenu.SetActive(true);
-        mainMenu.SetActive(false);
-        pauseGame.SetActive(false);
-        winGame.SetActive(false);
-
-        if (mobileControls != null) mobileControls.SetActive(false);
-
-        Time.timeScale = 0f;
+        HighScoreManager.SaveScore(score);
+        highScoreSaved = true;
     }
+
+    SaveSystem.DeleteSave();
+
+    gameOverMenu.SetActive(true);
+    mainMenu.SetActive(false);
+    pauseGame.SetActive(false);
+    winGame.SetActive(false);
+
+    if (mobileControls != null) mobileControls.SetActive(false);
+    Time.timeScale = 0f;
+}
+
     public void PauseGameMenu()
     {
         pauseGame.SetActive(true);
@@ -421,6 +431,9 @@ public class GameManager : MonoBehaviour
     }
     public void StartGame()
     {
+        waveScore = 0; // ✅ RESET ĐIỂM WAVE
+        UpdateWaveScoreUI();
+        
         pauseGame.SetActive(false);
         mainMenu.SetActive(false);
         gameOverMenu.SetActive(false);
@@ -443,14 +456,20 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
     }
     public void WinGame()
+{
+    if (!highScoreSaved)
     {
-        winGame.SetActive(true);
-        mainMenu.SetActive(false);
-        pauseGame.SetActive(false);
-        gameOverMenu.SetActive(false);
-
-        if (mobileControls != null) mobileControls.SetActive(false);
-
-        Time.timeScale = 0f;
+        HighScoreManager.SaveScore(score);
+        highScoreSaved = true;
     }
+
+    winGame.SetActive(true);
+    mainMenu.SetActive(false);
+    pauseGame.SetActive(false);
+    gameOverMenu.SetActive(false);
+
+    if (mobileControls != null) mobileControls.SetActive(false);
+    Time.timeScale = 0f;
+}
+
 }

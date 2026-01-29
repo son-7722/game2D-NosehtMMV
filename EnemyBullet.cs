@@ -7,6 +7,7 @@ public class EnemyBullet : MonoBehaviour
     [SerializeField] private float damage = 10f;
 
     private Vector2 moveDir;
+    private bool isBossBullet = false;
 
     private void Start()
     {
@@ -23,6 +24,11 @@ public class EnemyBullet : MonoBehaviour
         moveDir = direction.normalized;
     }
 
+    public void SetBossBullet(bool value)
+    {
+        isBossBullet = value;
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
@@ -36,7 +42,10 @@ public class EnemyBullet : MonoBehaviour
         }
         else if (collision.CompareTag("Wall"))
         {
-            Destroy(gameObject);
+            if (!isBossBullet)
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }
