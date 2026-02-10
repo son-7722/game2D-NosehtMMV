@@ -1,110 +1,178 @@
-using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private Joystick joystick;
+    [SerializeField] private NewInputJoystick joystick;
 
-    private Rigidbody2D  rb;
+
+    private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Animator animator;
+
     [SerializeField] private float maxHp = 100f;
     private float currentHp;
     [SerializeField] private Image hpBar;
     [SerializeField] private GameManager gameManager;
+
+    private float baseMoveSpeed;
+    private Vector2 moveInput;
+
+    // INPUT SYSTEM
+    private InputAction moveAction;
+    private InputAction pauseAction;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+
+        baseMoveSpeed = moveSpeed;
+
+        // MOVE: WASD + Arrow
+        moveAction = new InputAction("Move", InputActionType.Value);
+        moveAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+
+        // PAUSE: ESC
+        pauseAction = new InputAction("Pause", InputActionType.Button, "<Keyboard>/escape");
     }
+
+    private void OnEnable()
+    {
+        moveAction.Enable();
+        pauseAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        moveAction.Disable();
+        pauseAction.Disable();
+    }
+
     void Start()
     {
         currentHp = maxHp;
         UpdateHpBar();
     }
 
-    // Update is called once per frame
+    public void UpdateSpeed(float multiplier)
+    {
+        moveSpeed = baseMoveSpeed * multiplier;
+    }
+
     void Update()
     {
-        MovePlayer();
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            gameManager.PauseGameMenu();
-        }
-    }
-    void MovePlayer()
-    {
-        Vector2 playerInput;
+        // Ưu tiên joystick mobile
         if (joystick != null && joystick.Direction.magnitude > 0.1f)
         {
-            playerInput = joystick.Direction;
+            moveInput = joystick.Direction;
         }
         else
         {
-            playerInput = new Vector2(
-                Input.GetAxisRaw("Horizontal"),
-                Input.GetAxisRaw("Vertical")
-            );
+            moveInput = moveAction.ReadValue<Vector2>();
         }
 
-        rb.linearVelocity = playerInput.normalized * moveSpeed;
-
-        if (playerInput.x < -0.1f)
+        if (pauseAction.WasPressedThisFrame())
         {
-           spriteRenderer.flipX = true;
+            gameManager.PauseGameMenu();
         }
-        else if (playerInput.x > 0.1f)
-        {
+
+        animator.SetBool("isRun", moveInput.magnitude > 0.1f);
+
+        if (moveInput.x < -0.1f)
+            spriteRenderer.flipX = true;
+        else if (moveInput.x > 0.1f)
             spriteRenderer.flipX = false;
-        }
-        animator.SetBool("isRun", playerInput.magnitude > 0.1f);
-        // Vector2 playerInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        // rb.linearVelocity = playerInput.normalized * moveSpeed;
-        // if(playerInput.x < 0)
-        // {
-        //     spriteRenderer.flipX = true;
-        // }else if (playerInput.x > 0)
-        // {
-        //     spriteRenderer.flipX = false;
-        // }
-        // if (playerInput != Vector2.zero)
-        // {
-        //     animator.SetBool("isRun", true);
-        // }else
-        // {
-        //     animator.SetBool("isRun", false);
-        // }
     }
-     public virtual void TakeDamage(float damage)
+
+    void FixedUpdate()
+    {
+        rb.linearVelocity = moveInput.normalized * moveSpeed;
+    }
+
+    public void TakeDamage(float damage)
     {
         currentHp -= damage;
         currentHp = Mathf.Max(currentHp, 0);
         UpdateHpBar();
+
         if (currentHp <= 0)
-        {
             Die();
-        }
     }
+
     public void Heal(float healValue)
     {
-        if (currentHp < maxHp)
-        {
-            currentHp += healValue;
-            currentHp = Mathf.Min(currentHp, maxHp);
-            UpdateHpBar();
-        }
+        currentHp = Mathf.Min(currentHp + healValue, maxHp);
+        UpdateHpBar();
     }
-    public virtual void Die()
+
+    public void Die()
     {
         gameManager.GameOverMenu();
     }
-    public void UpdateHpBar()
+
+    private void UpdateHpBar()
     {
         if (hpBar != null)
-        {
             hpBar.fillAmount = currentHp / maxHp;
-        }
     }
+    public float GetCurrentHp()
+    {
+        return currentHp;
+    }
+
+    public void SetHp(float hp)
+    {
+        currentHp = Mathf.Clamp(hp, 0, maxHp);
+        UpdateHpBar();
+    }
+    // ====== UPGRADE API ======
+    public void IncreaseMaxHp(float amount)
+    {
+        maxHp += amount;
+        currentHp += amount; // hồi thêm khi nâng
+        UpdateHpBar();
+    }
+
+    public void IncreaseMoveSpeed(float amount)
+    {
+        baseMoveSpeed += amount;
+        moveSpeed = baseMoveSpeed;
+    }
+    // ===== SAVE / LOAD API =====
+    public float GetMaxHp()
+    {
+        return maxHp;
+    }
+
+    public float GetBaseMoveSpeed()
+    {
+        return baseMoveSpeed;
+    }
+
+    public void SetMaxHp(float value)
+    {
+        maxHp = value;
+        currentHp = Mathf.Min(currentHp, maxHp);
+        UpdateHpBar();
+    }
+
+    public void SetMoveSpeed(float value)
+    {
+        baseMoveSpeed = value;
+        moveSpeed = value;
+    }
+
+
 }
